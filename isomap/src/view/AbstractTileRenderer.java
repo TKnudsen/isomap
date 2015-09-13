@@ -17,17 +17,19 @@
 
 package view;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
 import terrain.TerrainModel;
 import terrain.TerrainType;
+import tiles.IndexProvider;
 import tiles.TileImage;
 import tiles.TileIndex;
 import tiles.TileSet;
-
 import common.OctDirection;
 import common.UnorderedTriple;
 
@@ -39,6 +41,7 @@ import common.UnorderedTriple;
 public abstract class AbstractTileRenderer {
 	private final TerrainModel terrainModel;
 	private final TileSet tileset;
+	protected IndexProvider indexProvider;
 	private Map<UnorderedTriple<TerrainType>, BufferedImage> terrainBorderSmoothingCache;
 
 	/**
@@ -71,7 +74,7 @@ public abstract class AbstractTileRenderer {
 		g.drawImage(img.getImage(), worldX, worldY, worldX + imgWidth, worldY + imgHeight, sx1, sy1, sx2, sy2, null);
 	}
 
-	protected void drawTileBorders(Graphics2D g, TileIndex tileIndex, OctDirection neighbor1, OctDirection neighbor2, TileIndex tileIndexNeighbor1, TileIndex tileIndexNeighbor2, int mapX, int mapY) {
+	protected void drawTileBorders(Graphics2D g, TileIndex tileIndex, OctDirection neighbor1, OctDirection neighbor2, int mapX, int mapY) {
 		TileImage img = tileset.getTileImage(tileIndex);
 
 		int imgWidth = img.getTileImageWidth();
@@ -91,16 +94,50 @@ public abstract class AbstractTileRenderer {
 		TerrainType terrainTypeNeighbor1 = terrainModel.getNeighborFor(mapX, mapY, neighbor1);
 		TerrainType terrainTypeNeighbor2 = terrainModel.getNeighborFor(mapX, mapY, neighbor2);
 
+		Integer[] neighborXY1 = terrainModel.getNeighborIndex(mapX, mapY, neighbor1);
+		Integer[] neighborXY2 = terrainModel.getNeighborIndex(mapX, mapY, neighbor2);
+
+		if (neighborXY1 == null)
+			return;
+
+		if (neighborXY2 == null)
+			return;
+
+		if (!indexProvider.contains(neighborXY1[0], neighborXY1[1]))
+			return;
+
+		if (!indexProvider.contains(neighborXY2[0], neighborXY2[1]))
+			return;
+
+		int worldXn1 = terrainModel.getWorldX(neighborXY1[0], neighborXY1[1]) - offX;
+		int worldYn1 = terrainModel.getWorldY(neighborXY1[0], neighborXY1[1]) - offY;
+
+		int worldXn2 = terrainModel.getWorldX(neighborXY2[0], neighborXY2[1]) - offX;
+		int worldYn2 = terrainModel.getWorldY(neighborXY2[0], neighborXY2[1]) - offY;
+
+		TileIndex tileIndexNeighbor1 = indexProvider.getCurrentIndex(neighborXY1[0], neighborXY1[1]);
+		TileIndex tileIndexNeighbor2 = indexProvider.getCurrentIndex(neighborXY2[0], neighborXY2[1]);
+
 		UnorderedTriple<TerrainType> triple = new UnorderedTriple<TerrainType>(terrainModel.getTile(mapX, mapY).getTerrain(), terrainTypeNeighbor1, terrainTypeNeighbor2);
 		if (terrainBorderSmoothingCache.get(triple) == null)
 			calculateSmoothingImage(triple, (BufferedImage) img.getImage(), (BufferedImage) tileset.getTileImage(tileIndexNeighbor1).getImage(), (BufferedImage) tileset.getTileImage(tileIndexNeighbor2).getImage());
+
+		GeneralPath gp = new GeneralPath();
+		gp.moveTo(worldX + imgWidth * 0.5, worldY + imgHeight * 0.5);
+		gp.lineTo(worldXn1 + imgWidth * 0.5, worldYn1 + imgHeight * 0.5);
+		gp.lineTo(worldXn2 + imgWidth * 0.5, worldYn2 + imgHeight * 0.5);
+		gp.closePath();
+		g.setColor(Color.MAGENTA);
+		g.draw(gp);
 
 		// g.drawImage(img.getImage(), worldX, worldY, worldX + imgWidth, worldY
 		// + imgHeight, sx1, sy1, sx2, sy2, null);
 	}
 
 	private void calculateSmoothingImage(UnorderedTriple<TerrainType> triple, BufferedImage biA, BufferedImage biB, BufferedImage biC) {
+		// TODO checkout Barycentric coordinates implementation
 
+		terrainBorderSmoothingCache.put(triple, null);
 	}
 
 	/**

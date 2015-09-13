@@ -31,57 +31,52 @@ import tiles.TileSet;
 
 /**
  * TODO Type description
+ * 
  * @author Martin Steiger
  */
-public class TileRendererBlending extends AbstractTileRenderer
-{
-	private IndexProvider indexProvider;
+public class TileRendererBlending extends AbstractTileRenderer {
+	// private IndexProvider indexProvider;
 
 	/**
 	 * @param terrainModel
 	 */
-	public TileRendererBlending(TerrainModel terrainModel, TileSet tileset)
-	{
+	public TileRendererBlending(TerrainModel terrainModel, TileSet tileset) {
 		super(terrainModel, tileset);
-		
+
 		this.indexProvider = new IndexProvider(terrainModel, tileset);
 	}
-	
-	public void drawTiles(Graphics2D g, List<Tile> visibleTiles)
-	{
-		for (Tile tile : visibleTiles)
-		{
+
+	public void drawTiles(Graphics2D g, List<Tile> visibleTiles) {
+		for (Tile tile : visibleTiles) {
 			int mapY = tile.getMapY();
 			int mapX = tile.getMapX();
 
-			TileIndex currIndex = indexProvider.getCurrentIndex(mapX, mapY); 
+			TileIndex currIndex = indexProvider.getCurrentIndex(mapX, mapY);
 			TileIndex nextIndex = indexProvider.getNextIndex(mapX, mapY);
 
 			TileIndex invalid = getTileset().getInvalidTileIndex();
 
 			drawTile(g, currIndex, mapX, mapY);
-			
-			if (nextIndex != invalid)
-			{
+
+			if (nextIndex != invalid) {
 				Integer step = indexProvider.getAnimStep(mapX, mapY);
 				Integer maxStep = indexProvider.getAnimSteps(tile.getTerrain());
-				
-				float alpha = (float)step / maxStep;
-				
+
+				float alpha = (float) step / maxStep;
+
 				Composite oldComp = g.getComposite();
-				
+
 				// TODO: Cache alpha composite
 				AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
-				
+
 				g.setComposite(ac);
 				drawTile(g, nextIndex, mapX, mapY);
 				g.setComposite(oldComp);
 			}
-			
+
 			Set<TileIndex> indices = indexProvider.getOverlaysFor(tile.getTerrain(), getTerrainModel().getNeighbors(mapX, mapY));
-			
-			for (TileIndex overlay : indices)
-			{
+
+			for (TileIndex overlay : indices) {
 				drawTile(g, overlay, mapX, mapY);
 			}
 		}
@@ -90,10 +85,9 @@ public class TileRendererBlending extends AbstractTileRenderer
 	/**
 	 * 
 	 */
-	public void nextFrame()
-	{
+	public void nextFrame() {
 		indexProvider.nextFrame();
-		
+
 	}
 
 }

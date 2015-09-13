@@ -35,7 +35,7 @@ import tiles.TileSet;
  * @author Martin Steiger
  */
 public class TileRendererDefault extends AbstractTileRenderer {
-	private IndexProvider indexProvider;
+	// private IndexProvider indexProvider;
 
 	/**
 	 * @param terrainModel
@@ -53,15 +53,33 @@ public class TileRendererDefault extends AbstractTileRenderer {
 			int mapX = tile.getMapX();
 
 			TileIndex currIndex = indexProvider.getCurrentIndex(mapX, mapY);
+			
 			drawTile(g, currIndex, mapX, mapY);
 
-			drawTileBorders(g, currIndex, OctDirection.EAST, OctDirection.SOUTH_EAST, mapX, mapY);
+//			drawTileBorders(g, currIndex, OctDirection.NORTH_EAST, OctDirection.SOUTH_EAST, mapX, mapY);
 
 			Set<TileIndex> indices = indexProvider.getOverlaysFor(tile.getTerrain(), getTerrainModel().getNeighbors(mapX, mapY));
 
 			for (TileIndex overlay : indices) {
 				drawTile(g, overlay, mapX, mapY);
 			}
+		}
+		
+		for (Tile tile : visibleTiles) {
+			int mapY = tile.getMapY();
+			int mapX = tile.getMapX();
+
+			TileIndex currIndex = indexProvider.getCurrentIndex(mapX, mapY);
+			
+//			drawTile(g, currIndex, mapX, mapY);
+
+			drawTileBorders(g, currIndex, OctDirection.NORTH_EAST, OctDirection.SOUTH_EAST, mapX, mapY);
+
+//			Set<TileIndex> indices = indexProvider.getOverlaysFor(tile.getTerrain(), getTerrainModel().getNeighbors(mapX, mapY));
+//
+//			for (TileIndex overlay : indices) {
+//				drawTile(g, overlay, mapX, mapY);
+//			}
 		}
 	}
 
