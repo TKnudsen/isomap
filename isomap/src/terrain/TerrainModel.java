@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+
 import common.OctDirection;
 
 
@@ -36,6 +37,24 @@ public interface TerrainModel
 	 * @return a map that contains all neighbor terrain types
 	 */
 	public Map<OctDirection, TerrainType> getNeighbors(int mapX, int mapY);
+	
+	/**
+	 * Retrieves the TerrainType of an adjacent Tile
+	 * @param x
+	 * @param y
+	 * @param dir
+	 * @return
+	 */
+	public TerrainType getNeighborFor(int x, int y, OctDirection dir);
+	
+	/**
+	 * retrieves the index of an adjacent Tile
+	 * @param x
+	 * @param y
+	 * @param dir
+	 * @return
+	 */
+	public Integer[] getNeighborIndex(int x, int y, OctDirection dir);
 
 	/**
 	 * @param worldX0 the left world coordinate

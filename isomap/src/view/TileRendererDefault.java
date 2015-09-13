@@ -21,6 +21,8 @@ import java.awt.Graphics2D;
 import java.util.List;
 import java.util.Set;
 
+import common.OctDirection;
+
 import terrain.TerrainModel;
 import terrain.Tile;
 import tiles.IndexProvider;
@@ -29,37 +31,35 @@ import tiles.TileSet;
 
 /**
  * TODO Type description
+ * 
  * @author Martin Steiger
  */
-public class TileRendererDefault extends AbstractTileRenderer
-{
+public class TileRendererDefault extends AbstractTileRenderer {
 	private IndexProvider indexProvider;
 
 	/**
 	 * @param terrainModel
 	 * @param view2
 	 */
-	public TileRendererDefault(TerrainModel terrainModel, TileSet tileset)
-	{
+	public TileRendererDefault(TerrainModel terrainModel, TileSet tileset) {
 		super(terrainModel, tileset);
-		
+
 		this.indexProvider = new IndexProvider(terrainModel, tileset);
 	}
-	
-	public void drawTiles(Graphics2D g, List<Tile> visibleTiles)
-	{
-		for (Tile tile : visibleTiles)
-		{
+
+	public void drawTiles(Graphics2D g, List<Tile> visibleTiles) {
+		for (Tile tile : visibleTiles) {
 			int mapY = tile.getMapY();
 			int mapX = tile.getMapX();
 
-			TileIndex currIndex = indexProvider.getCurrentIndex(mapX, mapY); 
+			TileIndex currIndex = indexProvider.getCurrentIndex(mapX, mapY);
 			drawTile(g, currIndex, mapX, mapY);
-			
+
+			drawTileBorders(g, currIndex, OctDirection.EAST, OctDirection.SOUTH_EAST, mapX, mapY);
+
 			Set<TileIndex> indices = indexProvider.getOverlaysFor(tile.getTerrain(), getTerrainModel().getNeighbors(mapX, mapY));
-			
-			for (TileIndex overlay : indices)
-			{
+
+			for (TileIndex overlay : indices) {
 				drawTile(g, overlay, mapX, mapY);
 			}
 		}

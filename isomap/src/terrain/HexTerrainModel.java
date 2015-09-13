@@ -25,19 +25,17 @@ import java.util.List;
 import java.util.Map;
 
 import tiles.HexTileSet;
-import tiles.TileSet;
 
 import com.google.common.base.Optional;
 import common.GridData;
 import common.OctDirection;
 
-
 /**
  * TODO Type description
+ * 
  * @author Martin Steiger
  */
-public class HexTerrainModel implements TerrainModel
-{
+public class HexTerrainModel implements TerrainModel {
 	private final GridData<Tile> tiles;
 
 	private final HexTileSet tileSet;
@@ -45,120 +43,110 @@ public class HexTerrainModel implements TerrainModel
 	private int mapWidth;
 	private int mapHeight;
 
-
 	/**
-	 * @param data the terrain data
+	 * @param data
+	 *            the terrain data
 	 */
-	public HexTerrainModel(GridData<TerrainType> terrainData, HexTileSet tileSet)
-	{
+	public HexTerrainModel(GridData<TerrainType> terrainData, HexTileSet tileSet) {
 		mapWidth = terrainData.getWidth();
 		mapHeight = terrainData.getHeight();
 
 		this.tiles = new GridData<Tile>(mapWidth, mapHeight, null);
 		this.tileSet = tileSet;
 
-		for (int y = 0; y < mapHeight; y++)
-		{
-			for (int x = 0; x < mapWidth; x++)
-			{
+		for (int y = 0; y < mapHeight; y++) {
+			for (int x = 0; x < mapWidth; x++) {
 				TerrainType terrain = terrainData.getData(x, y);
 				Tile tile = new Tile(x, y, terrain);
 				tiles.setData(x, y, tile);
 			}
 		}
-		
+
 	}
 
-	private static boolean isOdd(int v)
-	{
+	private static boolean isOdd(int v) {
 		return v % 2 == 1;
 	}
 
 	@Override
-	public int getMapHeight()
-	{
+	public int getMapHeight() {
 		return mapHeight;
 	}
 
 	@Override
-	public int getMapWidth()
-	{
+	public int getMapWidth() {
 		return mapWidth;
-	}	
-	
+	}
+
 	@Override
-	public Tile getTile(int x, int y)
-	{
+	public Tile getTile(int x, int y) {
 		return tiles.getData(x, y);
 	}
 
 	@Override
-	public int getWorldX(int x, int y)
-	{
+	public int getWorldX(int x, int y) {
 		return x * (tileSet.getTopLength() + tileSet.getTileWidth()) / 2;
 	}
 
 	@Override
-	public int getWorldY(int x, int y)
-	{
+	public int getWorldY(int x, int y) {
 		return y * tileSet.getTileHeight() + (x % 2) * tileSet.getTileHeight() / 2;
 	}
-	
+
 	@Override
-	public Optional<Tile> getTileAtWorldPos(int x, int y)
-	{
+	public Optional<Tile> getTileAtWorldPos(int x, int y) {
 		double a = tileSet.getTileWidth() / 2;
 		double b = tileSet.getTileHeight() / 2;
 		double c = tileSet.getTopLength() / 2.0;
-		
+
 		x -= tileSet.getTileWidth() / 2;
 		y -= tileSet.getTileHeight() / 2;
-		
+
 		// Find out which major row and column we are on:
-	    int row = (int)(y / b);
-	    int col = (int)(x / (a + c));
-	 
-	    // Compute the offset into these row and column:
-	    double dy = y - row * b;
-	    double dx = x - col * (a + c);
-	 
-	    // Are we on the left of the hexagon edge, or on the right?
-	    if (((row ^ col) & 1) == 0)
-	        dy = b - dy;
-	    int right = dy * (a - c) < b * (dx - c) ? 1 : 0;
-	 
-	    // Now we have all the information we need, just fine-tune row and column.
-	    row += (col ^ row ^ right) & 1;
-	    col += right;
-		
-		if (col >= 0 && col < mapWidth &&
-			row >= 0 && row < mapHeight * 2)
+		int row = (int) (y / b);
+		int col = (int) (x / (a + c));
+
+		// Compute the offset into these row and column:
+		double dy = y - row * b;
+		double dx = x - col * (a + c);
+
+		// Are we on the left of the hexagon edge, or on the right?
+		if (((row ^ col) & 1) == 0)
+			dy = b - dy;
+		int right = dy * (a - c) < b * (dx - c) ? 1 : 0;
+
+		// Now we have all the information we need, just fine-tune row and
+		// column.
+		row += (col ^ row ^ right) & 1;
+		col += right;
+
+		if (col >= 0 && col < mapWidth && row >= 0 && row < mapHeight * 2)
 
 		{
 			return Optional.of(getTile(col, row / 2));
 		}
-		
+
 		return Optional.absent();
 	}
 
 	@Override
-	public List<Tile> getTilesInRect(int worldX0, int worldY0, int worldX1, int worldY1)
-	{
+	public List<Tile> getTilesInRect(int worldX0, int worldY0, int worldX1, int worldY1) {
 		int tileHeight = tileSet.getTileHeight() / 2;
-		
+
 		int avgWidth = (tileSet.getTopLength() + tileSet.getTileWidth()) / 2;
-		
+
 		// the width of one diagonal
 		int leftIn = (tileSet.getTileWidth() - tileSet.getTopLength()) / 2;
-		
-		// this computes the map-y based on rectangular shapes 
+
+		// this computes the map-y based on rectangular shapes
 		// it is then independent of x - basically the inverse of getWorldY()
-		
-		int y02 = worldY0 / tileHeight - 1;	// the prev. row is displayed as it is 2 rows high
+
+		int y02 = worldY0 / tileHeight - 1; // the prev. row is displayed as it
+											// is 2 rows high
 		int y12 = worldY1 / tileHeight - 1;
 		int x0 = (worldX0 - leftIn) / avgWidth;
 		int x1 = worldX1 / avgWidth;
-		
+
 		// Restrict to map bounds
 		int minY = Math.max(y02, 0);
 		int maxY = Math.min(y12, 2 * mapHeight - 2);
@@ -169,110 +157,149 @@ public class HexTerrainModel implements TerrainModel
 
 		// if the top y/2 value is odd
 		// then add every odd x tile
-		if (minY % 2 == 1)
-		{
-			for (int x = minX + (minX + 1) % 2; x <= maxX; x += 2)
-			{
+		if (minY % 2 == 1) {
+			for (int x = minX + (minX + 1) % 2; x <= maxX; x += 2) {
 				result.add(getTile(x, minY / 2));
 			}
-			
+
 			minY++;
 		}
-		
+
 		// minY is always even here
-		
-		for (int y = minY; y <= maxY; y += 2)
-		{
-			for (int x = minX; x <= maxX; x++)
-			{
+
+		for (int y = minY; y <= maxY; y += 2) {
+			for (int x = minX; x <= maxX; x++) {
 				result.add(getTile(x, y / 2));
 			}
 		}
 
 		// if the bottom y/2 value is odd
 		// then add every even x tile
-		if (maxY % 2 == 1)
-		{
-			for (int x = minX + (minX % 2); x < maxX + 1; x += 2)
-			{
+		if (maxY % 2 == 1) {
+			for (int x = minX + (minX % 2); x < maxX + 1; x += 2) {
 				result.add(getTile(x, maxY / 2 + 1));
 			}
 		}
-		
+
 		return result;
 	}
- 
+
 	@Override
-	public Map<OctDirection, TerrainType> getNeighbors(int mapX, int mapY)
-	{
+	public Map<OctDirection, TerrainType> getNeighbors(int mapX, int mapY) {
 		Map<OctDirection, TerrainType> pattern = new HashMap<OctDirection, TerrainType>();
-		
-		for (OctDirection dir : OctDirection.values())
-		{
+
+		for (OctDirection dir : OctDirection.values()) {
 			TerrainType neigh = getNeighborFor(mapX, mapY, dir);
-			
+
 			if (neigh != UNDEFINED)
 				pattern.put(dir, neigh);
 		}
 
 		return pattern;
 	}
-	
+
 	/**
-	 * @param x the x coord
-	 * @param y the y coord
+	 * @param x
+	 *            the x coord
+	 * @param y
+	 *            the y coord
 	 * @return the type or UNDEFINED if x or y are invalid
 	 */
-	private TerrainType getTerrain(int x, int y)
-	{
+	private TerrainType getTerrain(int x, int y) {
 		// x and y are often invalid map coords.
 		if (x < 0 || x >= getMapWidth())
 			return UNDEFINED;
-	
+
 		if (y < 0 || y >= getMapHeight())
 			return UNDEFINED;
-		
-		return getTile(x,y).getTerrain();
+
+		return getTile(x, y).getTerrain();
 	}
 
-	private TerrainType getNeighborFor(int x, int y, OctDirection dir)
-	{
-		switch (dir)
-		{
+	@Override
+	public TerrainType getNeighborFor(int x, int y, OctDirection dir) {
+		switch (dir) {
 		case NORTH:
 			return getTerrain(x, y - 1);
 
 		case SOUTH:
 			return getTerrain(x, y + 1);
-			
+
 		case NORTH_EAST:
-			if (isOdd(y)) 
-				return getTerrain(x + 1, y); else 
+			if (isOdd(y))
+				return getTerrain(x + 1, y);
+			else
 				return getTerrain(x + 1, y - 1);
-			
+
 		case NORTH_WEST:
 			if (isOdd(y))
-				return getTerrain(x - 1, y); else
+				return getTerrain(x - 1, y);
+			else
 				return getTerrain(x - 1, y - 1);
-			
+
 		case SOUTH_EAST:
 			if (isOdd(y))
-				return getTerrain(x + 1, y + 1); else
+				return getTerrain(x + 1, y + 1);
+			else
 				return getTerrain(x + 1, y);
-			
+
 		case SOUTH_WEST:
 			if (isOdd(y))
-				return getTerrain(x - 1, y + 1); else
+				return getTerrain(x - 1, y + 1);
+			else
 				return getTerrain(x - 1, y);
-			
+
 		case EAST:
 			return UNDEFINED;
-			
+
 		case WEST:
 			return UNDEFINED;
 		}
-		
+
 		return UNDEFINED;
 	}
-	
+
+	@Override
+	public Integer[] getNeighborIndex(int x, int y, OctDirection dir) {
+		switch (dir) {
+		case NORTH:
+			return new Integer[] { x, y - 1 };
+
+		case SOUTH:
+			return new Integer[] { x, y + 1 };
+
+		case NORTH_EAST:
+			if (isOdd(y))
+				return new Integer[] { x + 1, y };
+			else
+				return new Integer[] { x + 1, y - 1 };
+
+		case NORTH_WEST:
+			if (isOdd(y))
+				return new Integer[] { x - 1, y };
+			else
+				return new Integer[] { x - 1, y - 1 };
+
+		case SOUTH_EAST:
+			if (isOdd(y))
+				return new Integer[] { x + 1, y + 1 };
+			else
+				return new Integer[] { x + 1, y };
+
+		case SOUTH_WEST:
+			if (isOdd(y))
+				return new Integer[] { x - 1, y + 1 };
+			else
+				return new Integer[] { x - 1, y };
+
+		case EAST:
+			return null;
+
+		case WEST:
+			return null;
+		}
+
+		return null;
+	}
+
 }
